@@ -2,3 +2,7 @@
 .idea/
 
 __pycache__/
+
+dbscan_report.html
+
+kmeans_report.html
