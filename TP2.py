@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import silhouette_score, rand_score, adjusted_rand_score, pair_confusion_matrix
+from sklearn.neighbors import NearestNeighbors
 
 import tp2_aux
 from sklearn.decomposition import PCA
@@ -168,7 +169,16 @@ if __name__ == '__main__':
 
     diag = pd.DataFrame(results_for_each_k)
 
-    dbscan = DBSCAN(eps=2)
+    distances, _ = NearestNeighbors(n_neighbors=6).fit(selected_features).kneighbors(selected_features)
+    distances = np.sort(distances, axis=0)
+    distances = distances[:, 5]
+    plt.grid(axis="y")
+    plt.ylabel("eps")
+    plt.plot(distances)
+    plt.tight_layout()
+    plt.show()
+
+    dbscan = DBSCAN(eps=0.37)
     dbscan_labels = dbscan.fit_predict(selected_features).astype(int)
     tp2_aux.report_clusters(np.array(range(563)),
                             dbscan_labels,
