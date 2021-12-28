@@ -6,7 +6,6 @@ import tp2_aux
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE, Isomap
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import VarianceThreshold
 from sklearn.cluster import KMeans, DBSCAN
 import matplotlib.pyplot as plt
 from pandas.plotting import scatter_matrix, parallel_coordinates
@@ -53,9 +52,22 @@ def scatter_matrix_plot():
     plt.show()
 
 
+def parallel_coordinates_plot():
+    plt.figure(figsize=(45, 30))
+    parallel_coordinates(df, "Name", color=colors, alpha=0.5)
+    plt.tight_layout()
+    plt.show()
+
+
+def drop_correlated_features():
+    corr_matrix = df.corr().abs()
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    to_drop = [column for column in upper.columns if any(upper[column] > 0.6)]
+    df.drop(to_drop, axis=1, inplace=True)
+
+
 if __name__ == '__main__':
     images = tp2_aux.images_as_matrix()
-    # images = VarianceThreshold().fit_transform(images)
     images = np.divide(images, 255)
     pca = PCA(6)
     trans_pca = pca.fit_transform(images)
@@ -84,24 +96,12 @@ if __name__ == '__main__':
     colors = ["lightgray", "red", "green", "blue"]
     scatter_matrix_plot()
 
-    plt.figure(figsize=(45, 30))
-    parallel_coordinates(df, "Name", color=colors, alpha=0.5)
-    plt.tight_layout()
-    plt.show()
+    parallel_coordinates_plot()
 
-    # Create correlation matrix
-    corr_matrix = df.corr().abs()
+    drop_correlated_features()
 
-    # Select upper triangle of correlation matrix
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    parallel_coordinates_plot()
 
-    # Find features with correlation greater than 0.95
-    to_drop = [column for column in upper.columns if any(upper[column] > 0.6)]
-
-    # Drop features
-    df.drop(to_drop, axis=1, inplace=True)
-
-    # selected_features = np.array(df.drop(["Name"], axis=1))
     df.drop(["Name"], axis=1, inplace=True)
 
     score_measures = ["silhouette_score",
@@ -111,7 +111,7 @@ if __name__ == '__main__':
                       "pair_recall",
                       "pair_f1"]
 
-    maxvars = 4
+    maxvars = 3
     kmin = 2
     kmax = 8
 
@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
     vars_for_each_k = {}
 
-    maximize_score = "pair_precision"
+    maximize_score = "adjusted_rand_score"
 
     labeled_rows = labels[labels[:, 1] > 0]
     labeled_values = labeled_rows[:, 1].astype(int)
