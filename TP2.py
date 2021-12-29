@@ -105,61 +105,44 @@ if __name__ == '__main__':
 
     df.drop(["Name"], axis=1, inplace=True)
 
-    score_measures = ["silhouette_score",
+    score_metrics = ["silhouette_score",
                       "adjusted_rand_score",
                       "rand_score",
                       "pair_precision",
                       "pair_recall",
                       "pair_f1"]
 
-    maxvars = 3
     kmin = 2
     kmax = 8
 
-    cols = list(df.columns)
     results_for_each_k = {}
-    for score in score_measures:
-        results_for_each_k[score] = []
-
-    vars_for_each_k = {}
-
-    maximize_score = "adjusted_rand_score"
+    for metric in score_metrics:
+        results_for_each_k[metric] = []
 
     labeled_rows = labels[labels[:, 1] > 0]
     labeled_values = labeled_rows[:, 1].astype(int)
     labeled_indices = labeled_rows[:, 0].astype(int)
+    selected_features = df[['pca_a', 'pca_b', 'pca_c']]
 
     for k in range(kmin, kmax + 1):
-        selected_variables = []
-        cols = list(df.columns)
-        while len(selected_variables) < maxvars:
-            results = {}
-            for score in score_measures:
-                results[score] = []
+        results = {}
+        for metric in score_metrics:
+            results[metric] = []
 
-            for col in cols:
-                scols = []
-                scols.extend(selected_variables)
-                scols.append(col)
-                kmeans = KMeans(n_clusters=k)
-                kmeans.fit(df[scols])
-                labeled_trimmed_col = df[scols].filter(items=labeled_indices, axis=0)
-                results["silhouette_score"].append(silhouette_score(df[scols], kmeans.predict(df[scols])))
-                for score in score_measures:
-                    if score != "silhouette_score":
-                        results[score].append(globals()[score](labeled_values, kmeans.predict(labeled_trimmed_col)))
+        kmeans = KMeans(n_clusters=k)
+        kmeans.fit(selected_features)
+        labeled_trimmed_col = selected_features.filter(items=labeled_indices, axis=0)
+        results["silhouette_score"].append(
+            silhouette_score(selected_features, kmeans.predict(selected_features)))
+        for metric in score_metrics:
+            if metric != "silhouette_score":
+                results[metric].append(globals()[metric](labeled_values, kmeans.predict(labeled_trimmed_col)))
 
-            selected_var = cols[np.argmax(results[maximize_score])]
-            selected_variables.append(selected_var)
-            cols.remove(selected_var)
+        for metric in score_metrics:
+            results_for_each_k[metric].append(max(results[metric]))
 
-        for score in score_measures:
-            results_for_each_k[score].append(max(results[score]))
-        vars_for_each_k[k] = selected_variables
-
+    maximize_score = "silhouette_score"
     best_k = np.argmax(results_for_each_k[maximize_score]) + kmin
-
-    selected_features = df[vars_for_each_k[best_k]]
 
     Kmean = KMeans(n_clusters=best_k)
     kmeans_labels = Kmean.fit_predict(selected_features).astype(int)
@@ -168,18 +151,56 @@ if __name__ == '__main__':
                             "kmeans_report.html")
 
     diag = pd.DataFrame(results_for_each_k)
+    diag.plot(kind='line')
+    plt.title("Kmeans Metrics")
+    plt.ylabel("score")
+    plt.xlabel("k")
+    plt.tight_layout()
+    plt.show()
 
     distances, _ = NearestNeighbors(n_neighbors=6).fit(selected_features).kneighbors(selected_features)
     distances = np.sort(distances, axis=0)
     distances = distances[:, 5]
+    distances = distances[::-1]
     plt.grid(axis="y")
     plt.ylabel("eps")
     plt.plot(distances)
     plt.tight_layout()
     plt.show()
 
-    dbscan = DBSCAN(eps=0.37)
+    dbscan = DBSCAN(eps=0.4)
     dbscan_labels = dbscan.fit_predict(selected_features).astype(int)
     tp2_aux.report_clusters(np.array(range(563)),
                             dbscan_labels,
                             "dbscan_report.html")
+
+    eps_min = 0.35
+    eps_max = 0.60
+
+    results_for_each_eps = {}
+    for metric in score_metrics:
+        results_for_each_eps[metric] = []
+
+    for eps in np.linspace(eps_min, eps_max, 5):
+        results = {}
+        for metric in score_metrics:
+            results[metric] = []
+
+        DBscan = DBSCAN(eps=eps)
+        labeled_trimmed_col = selected_features.filter(items=labeled_indices, axis=0)
+        results["silhouette_score"].append(
+            silhouette_score(selected_features, DBscan.fit_predict(selected_features)))
+        for metric in score_metrics:
+            if metric != "silhouette_score":
+                results[metric].append(globals()[metric](labeled_values, DBscan.fit_predict(labeled_trimmed_col)))
+
+        for metric in score_metrics:
+            results_for_each_eps[metric].append(max(results[metric]))
+
+    diag2 = pd.DataFrame(results_for_each_eps)
+    diag2.plot(kind='line')
+    plt.title("DBSCAN Metrics")
+    plt.ylabel("score")
+    plt.xlabel("eps")
+    plt.tight_layout()
+    plt.show()
