@@ -11,32 +11,37 @@ refere um ficheiro de imagem teste.png na mesma pasta deste documento.
 QUESTÔES:
 
 Q1: Explique como seleccionou os melhores atributos para a fase de clustering. Em particular, os métodos de visualização usados para explorar os 18 atributos extraídos e quaisquer testes estatísticos usados.
-R1:
+R1: Após análise da tabela de correlações entre features, scatter matrix e parallel coordinates, selecionaram-se as três primeiras features geradas pelo PCA, visto que são as que representam a maior parte da variância e também foram selecionadas por experiências anteriores com grid search.
 
 
 Q2: Depois de seleccionar os atributos, standardizou ou normalizou os valores? Justifique a sua decisão.
-R2:
+R2: Os valores foram standarderizados para poder comparar as features geradas pelos diferentes métodos. Manteve-se a mesma pois o Kmeans poderia dar importâncias diferentes a features com variâncias diferentes.
 
 
 Q3: Explique como encontrou o valor do raio da vizinhança (epsilon) para o algoritmo de DBSCAN pelo procedimento descrito no artigo "A density-based algorithm for discovering clusters in large spatial databases with noise".
-R3:
+R3: Recorrendo à classe NearestNeighbors calculou-se a distância de cada ponto ao seu 5º nearest neighbour. Ordenando estas distâncias e colocando-as num plot escolheu-se epsilon correspondente à ordenada do ponto de mudança acentuada do declive do gráfico.
 
 
 Q4: Examinando os clusters gerados pelo algoritmo DBSCAN com o valor otimizado pelo método descrito no artigo, parece-lhe que o resultado é adequado para aglomerar estas imagens? Justifique a sua resposta.
-R4:
+R4: A alteração do declive do gráfico obtido é relativamente suave pelo que há vários valores candidatos de epsilon. Para valores mais elevados (0.60), é obtido um só cluster, o que não é de todo útil. Já para valores mais baixos (0.40) são obtidos vários clusters pequenos, que, apesar de não aglomerarem as imagens ao desejo dos biólogos, conseguem agrupar algumas bactérias semelhantes e erros entre si.
 
 
 Q5: Descreva a sua análise dos parâmetros k (para K-Means) e epsilon (para DBSCAN) usando os indicadores internos e externos indicados no enunciado. Inclua os dois gráficos com os valores dos indicadores (indicando o nome da imagem de cada plot numa linha da resposta) em função dos parâmetros k e epsilon e descreva a escolha dos intervalos nos quais examinou estes parâmetros. Indique, justificando, que conclusões pode tirar desta análise.
-R5:
+R5: A análise de Kmeans foi feita para valores de k entre 2 e 8 (0 a 6 no gráfico) e para DBSCAN entre 0.35 e 0.60 (0 a 4 no gráfico). No caso de Kmeans verifica-se que os indicadores externos começam a cair para valores mais elevados de k pois o algoritmo começa a colocar membros de uma mesma classe em clusters diferentes. No caso de DBSCAN verifica-se que os indicadores internos têm em geral um mau desempenho devido ao número elevado de clusters.
+Kmeans_metrics.png
+DBSCAN_metrics.png
+
 
 Q6: Seleccione alguns valores dos parâmetros testados na questão cinco e examine os clusters correspondentes com mais atenção, gerando o ficheiro HTML com as imagens. Justifique a escolha destes valores, discuta as diferentes opções e proponha uma recomendação que poderia ajudar a tarefa dos biólogos de classificar as células e rejeitar erros de segmentação.
-R6:
+R6: DBSCAN com epsilon igual a 0.40, apresenta 10 clusters, dos quais 9 são compostos unicamente por células extremamente semelhantes, o que pode auxiliar os biólogos a classificá-las em massa. Kmeans com k igual a 5 apresenta 4 clusters sem erros de segmentação e vasta maioria das células pertencentes à mesma classe. Para outros valores os resultados obtidos foram piores ou equivalentes, sendo de se notar que no caso de DBSCAN, valores mais baixos levam a mais células sem classificação sem grande benefício e valores mais altos levam à formação de um só cluster enorme. Já para Kmeans, k mais elevado separa mais frequentemente células da mesma classe e valores mais baixos levam a que as mesmas não sejam separadas.
 
 Q7: Discuta vantagens, problemas ou otros aspectos destes dois algoritmos (K-Means e DBSCAN) que considere relevantes para ajudar os biólogos a organizar estas imagens, considerando o seu conhecimento teórico destes algoritmos bem como os resultados que obteve no seu trabalho.
-R7:
+R7: Os algoritmos parecem ser sensíveis ao brilho das imagens, visto que as features utilizadas devem reconhecê-lo como motivo de diferenciação pelo que se os biólogos utilizássem iluminação mais uniforme (ou houvesse lugar a algum pré processamento da imagem) os resultados provavélmente seriam melhores.
+O algoritmo DBSCAN tem tendência a agrupar células mesmo que sejam pouco semelhantes visto que serão todas transitivamente vizinhas umas das outras. Isto poderá ser visto como uma vantagem para a rejeição de erros dado que estes serão em geral particularmente diferentes dos restantes pelo que a precisão na identificação de erros será elevada mesmo que o recall não seja o desejável.
+O algoritmo Kmeans identifica pontos em formas convexas no espaço das features selecionadas, o que se revela problemático no caso de caracteristicas que não sejam usadas para diferenciar a classe de uma célula, visto que terá tendência a separá-las segundo as mesmas. No entanto, no caso de características exclusivas a um subconjunto de classes isto pode ser utilizado como auxílio à diferenciação de classes.
 
 Q8: Considere outros algoritmos de clustering implementados na biblioteca Scikit-Learn. Escolha um e aplique-o a este problema, optimizando os parâmetros que julgar adequado da forma que lhe parecer melhor. Justifique a sua escolha e discuta se esta opção daria resultados mais úteis para os biólogos.
-R8:
+R8: Escolheu-se AgglomerativeClustering com ward linkage pois este algoritmo visa reduzir a variância referente às features em cada cluster, o que para 7 clusters foi capaz de produzir resultados satisfatórios no que toca a um isolamento dos erros de segmentação com maior recall e uma precisão aceitável. Conseguiu ainda manter os restantes clusters com maiorias vastas de células pertencentes à mesma classe, especialmente no que toca à separação entre as duas últimas classes.
 
 Q9: (Opcional) Implemente o algoritmo de clustering hierárquico Bissecting K-Means, conforme descrito na página do enunciado e na Aula 19. Examine e discuta os resultados e sua aplicação ao problema de ajudar os biólogos a selecionar e classificar imagens de células.
 R9:

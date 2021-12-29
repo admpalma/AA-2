@@ -144,7 +144,7 @@ if __name__ == '__main__':
     maximize_score = "silhouette_score"
     best_k = np.argmax(results_for_each_k[maximize_score]) + kmin
 
-    Kmean = KMeans(n_clusters=best_k)
+    Kmean = KMeans(n_clusters=5)
     kmeans_labels = Kmean.fit_predict(selected_features).astype(int)
     tp2_aux.report_clusters(np.array(range(563)),
                             kmeans_labels,
@@ -156,6 +156,7 @@ if __name__ == '__main__':
     plt.ylabel("score")
     plt.xlabel("k")
     plt.tight_layout()
+    plt.savefig("Kmeans_metrics.png", dpi=300)
     plt.show()
 
     distances, _ = NearestNeighbors(n_neighbors=6).fit(selected_features).kneighbors(selected_features)
@@ -203,6 +204,7 @@ if __name__ == '__main__':
     plt.ylabel("score")
     plt.xlabel("eps")
     plt.tight_layout()
+    plt.savefig("DBSCAN_metrics.png", dpi=300)
     plt.show()
 
     agglomerative = AgglomerativeClustering(linkage="ward", n_clusters=7)
