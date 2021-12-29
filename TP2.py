@@ -212,3 +212,26 @@ if __name__ == '__main__':
     tp2_aux.report_clusters(np.array(range(563)),
                             agglomerative_labels,
                             "agglomerative_report.html")
+
+    X = np.array(selected_features)
+
+    target_clusters = 6
+    current_clusters = 1
+    cluster_tree = [[] for _ in range(len(X))]
+    clusters = [[i for i in range(len(X))]]
+    while current_clusters != target_clusters:
+        cluster_to_split = clusters.pop(np.argmax((len(cluster) for cluster in clusters)))
+
+        points_to_split = X[cluster_to_split]
+        kmeans = KMeans(n_clusters=2).fit(points_to_split)
+        new_clusters = [[], []]
+        for index, point, label in zip(cluster_to_split, points_to_split, kmeans.labels_):
+            new_clusters[label].append(index)
+            cluster_tree[index].append(label)
+
+        clusters.extend(new_clusters)
+        current_clusters += 1
+
+    tp2_aux.report_clusters_hierarchical(np.array(range(563)),
+                            cluster_tree,
+                            "bissecting_kmeans_report.html")
