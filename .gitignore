@@ -6,3 +6,5 @@ __pycache__/
 dbscan_report.html
 
 kmeans_report.html
+
+agglomerative_report.html

@@ -7,7 +7,7 @@ import tp2_aux
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE, Isomap
 from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
 import matplotlib.pyplot as plt
 from pandas.plotting import scatter_matrix, parallel_coordinates
 
@@ -204,3 +204,9 @@ if __name__ == '__main__':
     plt.xlabel("eps")
     plt.tight_layout()
     plt.show()
+
+    agglomerative = AgglomerativeClustering(linkage="ward", n_clusters=7)
+    agglomerative_labels = agglomerative.fit_predict(selected_features).astype(int)
+    tp2_aux.report_clusters(np.array(range(563)),
+                            agglomerative_labels,
+                            "agglomerative_report.html")
