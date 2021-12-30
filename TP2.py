@@ -35,6 +35,7 @@ def pca_plot():
     plt.xlabel("Principal Component")
     plt.title("PCA Variance Explained")
     plt.tight_layout()
+    plt.savefig("PCA_variances.png", dpi=300)
     plt.show()
 
 
@@ -50,13 +51,15 @@ def scatter_matrix_plot():
     for i in range(df.shape[1] - 1):
         axes[i, df.shape[1] - 1].set_ylim(-2.0, 2.0)
     plt.tight_layout()
+    plt.savefig("scatter_matrix.png")
     plt.show()
 
 
-def parallel_coordinates_plot():
+def parallel_coordinates_plot(filename):
     plt.figure(figsize=(45, 30))
     parallel_coordinates(df, "Name", color=colors, alpha=0.5)
     plt.tight_layout()
+    plt.savefig(filename)
     plt.show()
 
 
@@ -70,17 +73,34 @@ def drop_correlated_features():
 if __name__ == '__main__':
     images = tp2_aux.images_as_matrix()
     images = np.divide(images, 255)
-    pca = PCA(6)
-    trans_pca = pca.fit_transform(images)
-    print(sum(pca.explained_variance_ratio_))
 
+    pca = PCA(6)
+    try:
+        with np.load("pca_features.npz") as pca_features:
+            trans_pca = pca_features["arr_0"]
+        pca.fit_transform(images)
+    except:
+        trans_pca = pca.fit_transform(images)
+        np.savez("pca_features.npz", trans_pca)
+
+    print(sum(pca.explained_variance_ratio_))
     pca_plot()
 
-    tsne = TSNE(n_components=6, method="exact")
-    trans_tsne = tsne.fit_transform(images)
+    try:
+        with np.load("tsne_features.npz") as tsne_features:
+            trans_tsne = tsne_features["arr_0"]
+    except:
+        tsne = TSNE(n_components=6, method="exact")
+        trans_tsne = tsne.fit_transform(images)
+        np.savez("tsne_features.npz", trans_tsne)
 
-    isomap = Isomap(n_components=6)
-    trans_isomap = isomap.fit_transform(images)
+    try:
+        with np.load("isomap_features.npz") as isomap_features:
+            trans_isomap = isomap_features["arr_0"]
+    except:
+        isomap = Isomap(n_components=6)
+        trans_isomap = isomap.fit_transform(images)
+        np.savez("isomap_features.npz", trans_isomap)
 
     extracted_features = np.concatenate((trans_pca, trans_tsne, trans_isomap), axis=1)
     extracted_features = StandardScaler().fit_transform(extracted_features)
@@ -97,11 +117,11 @@ if __name__ == '__main__':
     colors = ["lightgray", "red", "green", "blue"]
     scatter_matrix_plot()
 
-    parallel_coordinates_plot()
+    parallel_coordinates_plot("full_scatter_plot.png")
 
     drop_correlated_features()
 
-    parallel_coordinates_plot()
+    parallel_coordinates_plot("no_correlated_scatter_plot.png")
 
     df.drop(["Name"], axis=1, inplace=True)
 
@@ -167,6 +187,7 @@ if __name__ == '__main__':
     plt.ylabel("eps")
     plt.plot(distances)
     plt.tight_layout()
+    plt.savefig("elbow_graph.png", dpi=300)
     plt.show()
 
     dbscan = DBSCAN(eps=0.4)
