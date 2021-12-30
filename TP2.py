@@ -236,7 +236,7 @@ if __name__ == '__main__':
 
     X = np.array(selected_features)
 
-    target_clusters = 6
+    target_clusters = 8
     current_clusters = 1
     cluster_tree = [[] for _ in range(len(X))]
     clusters = [[i for i in range(len(X))]]
@@ -246,7 +246,7 @@ if __name__ == '__main__':
         points_to_split = X[cluster_to_split]
         kmeans = KMeans(n_clusters=2).fit(points_to_split)
         new_clusters = [[], []]
-        for index, point, label in zip(cluster_to_split, points_to_split, kmeans.labels_):
+        for index, label in zip(cluster_to_split, kmeans.labels_):
             new_clusters[label].append(index)
             cluster_tree[index].append(label)
 
@@ -254,5 +254,5 @@ if __name__ == '__main__':
         current_clusters += 1
 
     tp2_aux.report_clusters_hierarchical(np.array(range(563)),
-                            cluster_tree,
-                            "bissecting_kmeans_report.html")
+                                         cluster_tree,
+                                         "bissecting_kmeans_report.html")
