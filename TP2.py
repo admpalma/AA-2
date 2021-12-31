@@ -174,9 +174,9 @@ if __name__ == '__main__':
     plt.savefig("Kmeans_metrics.png", dpi=300)
     plt.show()
 
-    distances, _ = NearestNeighbors(n_neighbors=6).fit(selected_features).kneighbors(selected_features)
-    distances = np.sort(distances, axis=0)
-    distances = distances[:, 5]
+    distances, _ = NearestNeighbors().fit(selected_features).kneighbors(selected_features)
+    distances = distances[:, 4]
+    distances = np.sort(distances)
     distances = distances[::-1]
     plt.grid(axis="y")
     plt.ylabel("eps")
