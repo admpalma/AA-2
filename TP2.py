@@ -145,21 +145,16 @@ if __name__ == '__main__':
     selected_features = df[['pca_a', 'pca_b', 'pca_c']]
 
     for k in range(kmin, kmax + 1):
-        results = {}
-        for metric in score_metrics:
-            results[metric] = []
-
         kmeans = KMeans(n_clusters=k)
         kmeans.fit(selected_features)
         labeled_trimmed_col = selected_features.filter(items=labeled_indices, axis=0)
-        results["silhouette_score"].append(
+        results_for_each_k["silhouette_score"].append(
             silhouette_score(selected_features, kmeans.predict(selected_features)))
         for metric in score_metrics:
             if metric != "silhouette_score":
-                results[metric].append(globals()[metric](labeled_values, kmeans.predict(labeled_trimmed_col)))
-
-        for metric in score_metrics:
-            results_for_each_k[metric].append(max(results[metric]))
+                results_for_each_k[metric].append(globals()[metric](
+                    labeled_values,
+                    kmeans.predict(labeled_trimmed_col)))
 
     maximize_score = "silhouette_score"
     best_k = np.argmax(results_for_each_k[maximize_score]) + kmin
@@ -170,8 +165,8 @@ if __name__ == '__main__':
                             kmeans_labels,
                             "kmeans_report.html")
 
-    diag = pd.DataFrame(results_for_each_k)
-    diag.plot(kind='line')
+    kmeans_metrics = pd.DataFrame(results_for_each_k, index=range(kmin, kmax + 1))
+    kmeans_metrics.plot(kind='line')
     plt.title("Kmeans Metrics")
     plt.ylabel("score")
     plt.xlabel("k")
@@ -204,23 +199,18 @@ if __name__ == '__main__':
         results_for_each_eps[metric] = []
 
     for eps in np.linspace(eps_min, eps_max, 5):
-        results = {}
-        for metric in score_metrics:
-            results[metric] = []
-
         DBscan = DBSCAN(eps=eps)
         labeled_trimmed_col = selected_features.filter(items=labeled_indices, axis=0)
-        results["silhouette_score"].append(
+        results_for_each_eps["silhouette_score"].append(
             silhouette_score(selected_features, DBscan.fit_predict(selected_features)))
         for metric in score_metrics:
             if metric != "silhouette_score":
-                results[metric].append(globals()[metric](labeled_values, DBscan.fit_predict(labeled_trimmed_col)))
+                results_for_each_eps[metric].append(globals()[metric](
+                    labeled_values,
+                    DBscan.fit_predict(labeled_trimmed_col)))
 
-        for metric in score_metrics:
-            results_for_each_eps[metric].append(max(results[metric]))
-
-    diag2 = pd.DataFrame(results_for_each_eps)
-    diag2.plot(kind='line')
+    dbscan_metrics = pd.DataFrame(results_for_each_eps, index=np.linspace(eps_min, eps_max, 5))
+    dbscan_metrics.plot(kind='line')
     plt.title("DBSCAN Metrics")
     plt.ylabel("score")
     plt.xlabel("eps")
